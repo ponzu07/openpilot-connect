@@ -9,8 +9,10 @@ export const DEFAULT_LOCATION = {
   longitude: -117.161052,
 };
 
-export const MAPBOX_STYLE = 'mapbox://styles/commaai/cjj4yzqk201c52ss60ebmow0w';
-export const MAPBOX_TOKEN = 'pk.eyJ1IjoiY29tbWFhaSIsImEiOiJjangyYXV0c20wMGU2NDluMWR4amUydGl5In0.6Vb11S6tdX6Arpj6trRE_g';
+export const MAPBOX_STYLE = import.meta.env.VITE_MAPBOX_STYLE
+  || 'mapbox://styles/commaai/cjj4yzqk201c52ss60ebmow0w';
+export const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+  || 'pk.eyJ1IjoiY29tbWFhaSIsImEiOiJjangyYXV0c20wMGU2NDluMWR4amUydGl5In0.6Vb11S6tdX6Arpj6trRE_g';
 
 const geocodingClient = mbxGeocoding({ accessToken: MAPBOX_TOKEN });
 

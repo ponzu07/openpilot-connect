@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
       // Local development can use the same Athena client through a same-origin path.
       proxy: {
         '/athena': {
-          target: 'https://athena.comma.ai',
+          target: 'https://openpilot.copirobo.com',
           changeOrigin: true,
           rewrite: path => path.replace(/^\/athena/, ''),
         },

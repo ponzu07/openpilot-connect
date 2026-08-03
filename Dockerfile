@@ -11,10 +11,10 @@ ADD . ./
 
 ARG VITE_APP_GIT_SHA=unknown
 ARG VITE_APP_GIT_TIMESTAMP=1970-01-01T00:00:00Z
-ARG VITE_COMMA_URL_ROOT=https://api.comma.ai/
-ARG VITE_ATHENA_URL_ROOT=https://athena.comma.ai/
-ARG VITE_BILLING_URL_ROOT=https://billing.comma.ai/
-ARG VITE_USERADMIN_URL_ROOT=https://useradmin.comma.ai/
+ARG VITE_COMMA_URL_ROOT=https://openpilot.copirobo.com/
+ARG VITE_ATHENA_URL_ROOT=https://openpilot.copirobo.com/
+ARG VITE_BILLING_URL_ROOT=https://openpilot.copirobo.com/
+ARG VITE_USERADMIN_URL_ROOT=https://useradmin.copirobo.com/
 ARG VITE_SENTRY_ENV
 ARG SENTRY_AUTH_TOKEN
 ARG SENTRY_RELEASE
