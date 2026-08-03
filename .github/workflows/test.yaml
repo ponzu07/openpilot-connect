@@ -3,7 +3,7 @@ name: test
 on:
   push:
     branches:
-      - master
+      - PonPilot
   pull_request:
   workflow_dispatch:
 
@@ -22,50 +22,3 @@ jobs:
 
       - name: Run unit tests
         run: bun run test
-
-  docker:
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    needs: [test]
-    if: github.repository == 'commaai/connect' && github.ref == 'refs/heads/master'
-    permissions:
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/commaai/connect
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=branch
-            type=ref,event=pr,prefix=
-            type=sha,format=long,prefix=
-        env:
-          DOCKER_METADATA_PR_HEAD_SHA: true
-
-      - name: get date
-        run: echo "GIT_TIMESTAMP=$(git show -s --format=%cI)" >> $GITHUB_ENV
-
-      - uses: docker/build-push-action@v5
-        with:
-          build-args: |
-            VITE_APP_GIT_SHA=${{ github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
-            VITE_APP_GIT_TIMESTAMP=${{ env.GIT_TIMESTAMP }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-            SENTRY_RELEASE=${{ github.event_name == 'push' && github.sha || github.event.pull_request.head.sha }}
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          provenance: false
-          sbom: false
