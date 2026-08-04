@@ -107,7 +107,7 @@ class ExplorerApp extends Component {
       this.setState({ pairLoading: true });
 
       try {
-        verifyPairToken(pairToken, true, 'explorer_pair_verify_pairtoken');
+        verifyPairToken(pairToken, true);
       } catch (err) {
         this.setState({ pairLoading: false, pairDongleId: null, pairError: `Error: ${err.message}` });
         await localforage.removeItem('pairToken');
@@ -134,7 +134,7 @@ class ExplorerApp extends Component {
         }
       } catch (err) {
         await localforage.removeItem('pairToken');
-        const msg = pairErrorToMessage(err, 'explorer_pair_pairtoken');
+        const msg = pairErrorToMessage(err);
         this.setState({ pairDongleId: null, pairLoading: false, pairError: `Error: ${msg}, please try again` });
       }
     }

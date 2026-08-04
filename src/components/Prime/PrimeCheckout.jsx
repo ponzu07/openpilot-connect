@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import dayjs from 'dayjs';
-import * as Sentry from '@sentry/react';
 import { withStyles, Typography, IconButton, Button, CircularProgress } from '@material-ui/core';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import CheckIcon from '@material-ui/icons/Check';
@@ -292,7 +291,6 @@ class PrimeCheckout extends Component {
     } catch (err) {
       // TODO show error messages
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'prime_goto_stripe_checkout' });
     }
   }
 

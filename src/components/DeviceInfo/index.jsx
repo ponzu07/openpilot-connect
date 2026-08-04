@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import * as Sentry from '@sentry/react';
 import dayjs from 'dayjs';
 
 import { withStyles, Typography, CircularProgress, Popper, Tooltip } from '@material-ui/core';
@@ -263,7 +262,6 @@ class DeviceInfo extends Component {
       if (this.mounted && dongleId === this.props.dongleId) {
         if (!err.message || err.message.indexOf('Device not registered') === -1) {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'device_info_athena_pandastate' });
         }
         this.setState({ carHealth: { error: err.message } });
       }
@@ -308,7 +306,6 @@ class DeviceInfo extends Component {
         error = 'device offline';
       } else {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'device_info_snapshot' });
         if (error.length > 5 && error[5] === '{') {
           try {
             error = JSON.parse(error.substr(5)).error;

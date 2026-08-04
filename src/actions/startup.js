@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react';
 import { account as Account, devices as Devices } from '../api';
 import MyCommaAuth from '@commaai/my-comma-auth';
 
@@ -14,7 +13,6 @@ async function initProfile() {
         await MyCommaAuth.logOut();
       } else {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'init_api_get_profile' });
       }
     }
   }
@@ -26,11 +24,10 @@ async function initDevices() {
 
   if (MyCommaAuth.isAuthenticated()) {
     try {
-      devices = devices.concat(await Devices.listDevices());
+      devices = devices.concat(await Devices.listDevices() ?? []);
     } catch (err) {
       if (!err.resp || err.resp.status !== 401) {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'init_api_list_devices' });
       }
     }
   }
@@ -47,10 +44,6 @@ export default function init() {
 
     const [profile, devices] = await Promise.all([initProfile(), initDevices()]);
     state = getState();
-
-    if (profile) {
-      Sentry.setUser({ id: profile.id });
-    }
 
     if (devices.length > 0) {
       if (!state.dongleId) {

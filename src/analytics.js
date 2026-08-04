@@ -1,5 +1,4 @@
 import { LOCATION_CHANGE } from 'connected-react-router';
-import * as Sentry from '@sentry/react';
 
 import MyCommaAuth from '@commaai/my-comma-auth';
 
@@ -250,7 +249,7 @@ export function analyticsMiddleware({ getState }) {
     try {
       logAction(action, prevState, state);
     } catch (err) {
-      Sentry.captureException(err, { fingerprint: 'analytics_middleware' });
+      console.error(err);
     }
 
     return res;

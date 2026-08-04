@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import dayjs from 'dayjs';
-import * as Sentry from '@sentry/react';
 
 import { withStyles, Typography, Button, Modal, Paper, IconButton, CircularProgress } from '@material-ui/core';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
@@ -286,7 +285,6 @@ export class PrimeManage extends Component {
         this.setState({ canceling: false, cancelError: 'Could not cancel due to unknown error. Please try again.' });
       }
     }).catch((err) => {
-      Sentry.captureException(err, { fingerprint: 'primemanage_cancel_prime' });
       this.setState({ canceling: false, cancelError: 'Could not cancel due to unknown error. Please try again.' });
     });
   }
@@ -299,7 +297,6 @@ export class PrimeManage extends Component {
     } catch (err) {
       // TODO show error messages
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'prime_goto_stripe_update' });
     }
   }
 
@@ -330,7 +327,6 @@ export class PrimeManage extends Component {
         });
       }
     } catch (err) {
-      Sentry.captureException(err, { fingerprint: 'primemanage_switch_plan' });
       const message = primeSwitchErrorMessage(err, plan);
       if (this.mounted) {
         this.setState({ planSwitchStatus: 'error', planSwitchMessage: message });
@@ -365,7 +361,6 @@ export class PrimeManage extends Component {
     } catch (err) {
       // TODO error handling
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'prime_fetch_stripe_session' });
     }
   }
 
@@ -388,7 +383,6 @@ export class PrimeManage extends Component {
         }
       } else {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'prime_fetch_subscription' });
       }
     }
   }

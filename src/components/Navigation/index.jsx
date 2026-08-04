@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import * as Sentry from '@sentry/react';
 import ReactMapGL, { GeolocateControl, HTMLOverlay, Marker, Source, WebMercatorViewport, Layer } from 'react-map-gl';
 import { withStyles, Typography, Button } from '@material-ui/core';
 import { Clear } from '@material-ui/icons';
@@ -256,7 +255,6 @@ class Navigation extends Component {
     } catch (err) {
       if (!err.message || err.message.indexOf('no_segments_uploaded') === -1) {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'nav_fetch_location' });
       }
     }
   }
@@ -398,7 +396,6 @@ class Navigation extends Component {
           this.setState({ viewport: newVp });
         } catch (err) {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'nav_flymarkers_viewport' });
         }
       }
     }

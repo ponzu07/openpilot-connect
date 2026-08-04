@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react';
 
 import mbxGeocoding from '@mapbox/mapbox-sdk/services/geocoding';
 
@@ -190,7 +189,7 @@ export async function reverseLookup(coords, navFormat = false) {
       return { place, details };
     }
   } catch (err) {
-    Sentry.captureException(err, { fingerprint: 'geocode_reverse_parse' });
+    console.error(err);
   }
 
   return null;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
-import * as Sentry from '@sentry/react';
 import { withStyles, Typography } from '@material-ui/core';
 import FilterList from '@material-ui/icons/FilterList';
 
@@ -49,7 +48,6 @@ const DriveList = (props) => {
       setDeviceStats({ result: resp });
     } catch (err) {
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'drive_list_device_stats' });
       setDeviceStats({ error: err.message });
     }
   }, [dongleId, device?.shared]);

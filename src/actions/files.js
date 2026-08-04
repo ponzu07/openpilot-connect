@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/react';
 import { athena as Athena, devices as Devices, raw as Raw } from '../api';
 
 import { updateDeviceOnline, fetchDeviceNetworkStatus } from '.';
@@ -28,7 +27,7 @@ function pathToFileName(dongleId, path) {
   return `${dongleId}|${seg}/${type}`;
 }
 
-async function athenaCall(dongleId, payload, sentryFingerprint, retryCount = 0) {
+async function athenaCall(dongleId, payload, retryCount = 0) {
   try {
     while (openRequests > MAX_OPEN_REQUESTS) {
       // eslint-disable-next-line no-await-in-loop
@@ -42,14 +41,13 @@ async function athenaCall(dongleId, payload, sentryFingerprint, retryCount = 0) 
     openRequests -= 1;
     if (!err.resp && retryCount < MAX_RETRIES) {
       await asyncSleep(2000);
-      return athenaCall(dongleId, payload, sentryFingerprint, retryCount + 1);
+      return athenaCall(dongleId, payload, retryCount + 1);
     }
     if (err.message && (err.message.indexOf('Timed out') === -1
       || err.message.indexOf('Device not registered') === -1)) {
       return { offline: true };
     }
     console.error(err);
-    Sentry.captureException(err, { fingerprint: sentryFingerprint });
     return { error: err.message };
   }
 }
@@ -67,7 +65,7 @@ export function setRouteViewed(dongleId, route) {
       method: 'setRouteViewed',
       params: { route },
     };
-    await athenaCall(dongleId, payload, 'action_files_set_route_viewed');
+    await athenaCall(dongleId, payload);
   };
 }
 
@@ -79,7 +77,6 @@ export async function fetchUploadUrls(dongleId, paths) {
     }
   } catch (err) {
     console.error(err);
-    Sentry.captureException(err, { fingerprint: 'action_files_upload_geturls' });
   }
   return null;
 }
@@ -102,7 +99,6 @@ export function fetchFiles(routeName, nocache = false) {
       files = await Raw.getRouteFiles(routeName, nocache);
     } catch (err) {
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'action_files_fetch_files' });
       return;
     }
 
@@ -152,7 +148,7 @@ export function fetchUploadQueue(dongleId) {
       jsonrpc: '2.0',
       id: 0,
     };
-    const uploadQueue = await athenaCall(dongleId, payload, 'action_files_athena_uploadqueue');
+    const uploadQueue = await athenaCall(dongleId, payload);
     if (!uploadQueue || !uploadQueue.result) {
       if (uploadQueue && uploadQueue.offline) {
         dispatch(updateDeviceOnline(dongleId, 0));
@@ -229,7 +225,7 @@ export function doUpload(dongleId, paths, urls) {
         params: { files_data: filesData },
         expiry: Math.floor(Date.now() / 1000) + (86400 * 7),
       };
-      const resp = await athenaCall(dongleId, payload, 'action_files_athena_uploads');
+      const resp = await athenaCall(dongleId, payload);
       if (resp && resp.error && resp.error.code === -32000
         && resp.error.data.message === 'too many values to unpack (expected 3)') {
         loopedUploads = true;
@@ -284,7 +280,7 @@ export function doUpload(dongleId, paths, urls) {
           expiry: Math.floor(Date.now() / 1000) + (86400 * 7),
         };
         // eslint-disable-next-line no-await-in-loop
-        const resp = await athenaCall(dongleId, payload, 'files_actions_athena_upload');
+        const resp = await athenaCall(dongleId, payload);
         if (!resp || resp.error) {
           const uploading = {};
           uploading[pathToFileName(dongleId, paths[i])] = {};
@@ -315,7 +311,6 @@ export function fetchAthenaQueue(dongleId) {
       queue = await Devices.getAthenaQueue(dongleId);
     } catch (err) {
       console.error(err);
-      Sentry.captureException(err, { fingerprint: 'action_files_fetch_athena_queue' });
       return;
     }
 
@@ -347,7 +342,7 @@ export function cancelUploads(dongleId, ids) {
       method: 'cancelUpload',
       params: { upload_id: ids },
     };
-    const resp = await athenaCall(dongleId, payload, 'action_files_athena_canceluploads');
+    const resp = await athenaCall(dongleId, payload);
     if (resp && resp.result && resp.result.success) {
       const idsArray = Array.isArray(ids) ? ids : [ids];
       dispatch({

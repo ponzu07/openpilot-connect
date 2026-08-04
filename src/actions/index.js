@@ -1,5 +1,4 @@
 import { push } from 'connected-react-router';
-import * as Sentry from '@sentry/react';
 import { athena as Athena, billing as Billing, devices as Devices, drives as Drives } from '../api';
 import MyCommaAuth from '@commaai/my-comma-auth';
 
@@ -105,7 +104,6 @@ export function checkRoutesData() {
       return routes
     }).catch((err) => {
       console.error('Failure fetching routes metadata', err);
-      Sentry.captureException(err, { fingerprint: 'timeline_fetch_routes' });
       routesRequest = null;
     });
 
@@ -232,7 +230,6 @@ export function primeFetchSubscription(dongleId, device, profile) {
           dispatch(primeGetSubscription(dongleId, subscription));
         }).catch((err) => {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'actions_fetch_subscription' });
         });
       } else {
         Billing.getSubscribeInfo(dongleId).then((subscribeInfo) => {
@@ -243,7 +240,6 @@ export function primeFetchSubscription(dongleId, device, profile) {
           });
         }).catch((err) => {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'actions_fetch_subscribe_info' });
         });
       }
     }
@@ -371,7 +367,6 @@ export function fetchSharedDevice(dongleId) {
     } catch (err) {
       if (!err.resp || err.resp.status !== 403) {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'action_fetch_shared_device' });
       }
     }
   };
@@ -412,7 +407,6 @@ export function fetchDeviceNetworkStatus(dongleId) {
           dispatch(updateDeviceOnline(dongleId, 0));
         } else {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'athena_fetch_networkmetered' });
         }
       }
     } else {
@@ -437,7 +431,6 @@ export function fetchDeviceNetworkStatus(dongleId) {
           dispatch(updateDeviceOnline(dongleId, 0));
         } else {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'athena_fetch_networktype' });
         }
       }
     }
@@ -467,7 +460,6 @@ export function fetchDeviceNotCar(dongleId) {
     } catch (err) {
       if (!err.message || err.message.indexOf('Device not registered') === -1) {
         console.error(err);
-        Sentry.captureException(err, { fingerprint: 'athena_fetch_notcar' });
       }
     }
   };

@@ -4,7 +4,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 
 function previewBranding() {
@@ -25,18 +24,6 @@ function previewBranding() {
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  let sentryPlugin;
-  if (mode === 'production' && process.env.SENTRY_AUTH_TOKEN) {
-    sentryPlugin = sentryVitePlugin({
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: 'commaai',
-      project: 'connect',
-      sourcemaps: {
-        filesToDeleteAfterUpload: ['**/*.map'],
-      },
-    });
-  }
-
   return {
     server: {
       port: 3000,
@@ -48,10 +35,6 @@ export default defineConfig(({ mode }) => {
           rewrite: path => path.replace(/^\/athena/, ''),
         },
       },
-    },
-    build: {
-      // Required for Sentry
-      sourcemap: true,
     },
     plugins: [
       // TODO: compression plugin
@@ -68,7 +51,6 @@ export default defineConfig(({ mode }) => {
           sourcemap: true,
         },
       }),
-      sentryPlugin,
       process.env.PREVIEW && previewBranding(),
     ].filter(Boolean),
     optimizeDeps: {

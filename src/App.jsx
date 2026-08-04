@@ -3,7 +3,6 @@ import { Provider } from 'react-redux';
 import { Route, Switch, Redirect } from 'react-router';
 import { ConnectedRouter } from 'connected-react-router';
 import localforage from 'localforage';
-import * as Sentry from '@sentry/react';
 
 import MyCommaAuth, { config as AuthConfig, storage as AuthStorage } from '@commaai/my-comma-auth';
 import { athena as Athena, auth as Auth, billing as Billing, request as Request } from './api';
@@ -18,6 +17,23 @@ import FullPageLoading from './components/FullPageLoading';
 
 const Explorer = lazy(() => import('./components/explorer'));
 const AnonymousLanding = lazy(() => import('./components/anonymous'));
+
+class ErrorBoundary extends Component {
+  state = {};
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidCatch(_, info) {
+    this.setState({ componentStack: info.componentStack });
+  }
+
+  render() {
+    const { error, componentStack } = this.state;
+    return error ? <ErrorFallback error={error} componentStack={componentStack} /> : this.props.children;
+  }
+}
 
 class App extends Component {
   constructor(props) {
@@ -58,7 +74,6 @@ class App extends Component {
           }
         } catch (err) {
           console.error(err);
-          Sentry.captureException(err, { fingerprint: 'app_auth_refresh_token' });
         }
       }
     }
@@ -79,7 +94,6 @@ class App extends Component {
 
       fetchTurnCredentials().catch((err) => {
         console.error('Failed to fetch TURN credentials', err);
-        Sentry.captureException(err, { fingerprint: 'app_fetch_turn_credentials' });
       });
     }
 
@@ -132,9 +146,9 @@ class App extends Component {
     // Use ErrorBoundary in production only
     if (import.meta.env.PROD) {
       content = (
-        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+        <ErrorBoundary>
           {content}
-        </Sentry.ErrorBoundary>
+        </ErrorBoundary>
       );
     }
 
