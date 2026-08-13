@@ -60,6 +60,10 @@ function getVideoPercent(state, offset) {
 }
 
 function logAction(action, prevState, state) {
+  if (typeof gtag !== 'function') {
+    return;
+  }
+
   if (MyCommaAuth.isAuthenticated() && !state.profile) { // no startup data yet
     return;
   }
