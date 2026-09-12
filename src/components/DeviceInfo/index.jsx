@@ -4,6 +4,8 @@ import dayjs from 'dayjs';
 
 import { withStyles, Typography, CircularProgress, Popper, Tooltip } from '@material-ui/core';
 import ContentCut from '@material-ui/icons/ContentCut';
+import Lock from '@material-ui/icons/Lock';
+import LockOpen from '@material-ui/icons/LockOpen';
 
 import { athena as Athena } from '../../api';
 import { deviceSupportsClips } from '../../api/clips';
@@ -166,6 +168,7 @@ class DeviceInfo extends Component {
     this.state = {
       carHealth: {},
       snapshot: {},
+      doorLock: {},
       windowWidth: window.innerWidth,
       bodyTeleopOpen: false,
       clipMenu: null,
@@ -173,10 +176,12 @@ class DeviceInfo extends Component {
     };
 
     this.snapshotButtonRef = React.createRef();
+    this.doorLockButtonRef = React.createRef();
 
     this.onVisible = this.onVisible.bind(this);
     this.fetchDeviceCarHealth = this.fetchDeviceCarHealth.bind(this);
     this.takeSnapshot = this.takeSnapshot.bind(this);
+    this.setDoorLock = this.setDoorLock.bind(this);
     this.snapshotType = this.snapshotType.bind(this);
     this.renderButtons = this.renderButtons.bind(this);
     this.renderSnapshotImage = this.renderSnapshotImage.bind(this);
@@ -318,6 +323,24 @@ class DeviceInfo extends Component {
     }
   }
 
+  async setDoorLock(lock) {
+    const { dongleId } = this.props;
+    this.setState({ doorLock: { fetching: true } });
+    try {
+      const resp = await Athena.postJsonRpcPayload(dongleId, {
+        method: 'setDoorLock',
+        params: { lock },
+        jsonrpc: '2.0',
+        id: 0,
+      });
+      if (!resp) throw new Error('device offline');
+      if (resp.error) throw new Error(resp.error.message);
+      if (dongleId === this.props.dongleId) this.setState({ doorLock: {} });
+    } catch (err) {
+      if (dongleId === this.props.dongleId) this.setState({ doorLock: { error: err.message } });
+    }
+  }
+
   snapshotType(showFront) {
     const { snapshot } = this.state;
     this.setState({ snapshot: { ...snapshot, showFront } });
@@ -382,7 +405,7 @@ class DeviceInfo extends Component {
 
   renderButtons() {
     const { classes, device } = this.props;
-    const { snapshot, carHealth, clipsSupported } = this.state;
+    const { snapshot, doorLock, carHealth, clipsSupported } = this.state;
     const isCommaBody = device?.rpc?.not_car;
 
     let batteryVoltage;
@@ -396,7 +419,7 @@ class DeviceInfo extends Component {
 
     const buttonOffline = deviceIsOnline(device) ? '' : classes.buttonOffline;
 
-    let error = null;
+    let error = doorLock.error || null;
     if (snapshot.error && snapshot.error.data && snapshot.error.data.message) {
       error = snapshot.error.data.message;
     } else if (snapshot.error && snapshot.error.message) {
@@ -452,6 +475,20 @@ class DeviceInfo extends Component {
             </button>
           </span>
         </Tooltip>}
+        {!isCommaBody && [['Lock doors', true, Lock], ['Unlock doors', false, LockOpen]].map(([title, lock, Icon]) => (
+          <Tooltip key={title} classes={{ tooltip: classes.popover }} title={title} placement="bottom">
+            <button
+              ref={ lock ? this.doorLockButtonRef : undefined }
+              className={`${classes.button} ${classes.carBattery} ${buttonOffline}`}
+              onClick={ () => this.setDoorLock(lock) }
+              disabled={ Boolean(doorLock.fetching || !deviceIsOnline(device)) }
+            >
+              { doorLock.fetching
+                ? <CircularProgress size={ 19 } />
+                : <Icon className='text-black' />}
+            </button>
+          </Tooltip>
+        ))}
         {!livestreamEnabled && (
           <Tooltip
             classes={{ tooltip: classes.popover }}
@@ -493,7 +530,7 @@ class DeviceInfo extends Component {
           className={ classes.popover }
           open={ Boolean(error) }
           placement="bottom"
-          anchorEl={ this.snapshotButtonRef.current }
+          anchorEl={ doorLock.error ? this.doorLockButtonRef.current : this.snapshotButtonRef.current }
         >
           <Typography>{ error }</Typography>
         </Popper>
