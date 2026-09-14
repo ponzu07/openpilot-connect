@@ -356,7 +356,7 @@ class DeviceInfo extends Component {
         id: 0,
       });
       if (!resp) throw new Error('device offline');
-      if (resp.error) throw new Error(resp.error.message);
+      if (resp.error) throw new Error(resp.error.message || 'no response from car');
       if (dongleId === this.props.dongleId) this.setState({ hvBattery: { soc: resp.result.soc } });
     } catch (err) {
       if (dongleId === this.props.dongleId) this.setState({ hvBattery: { error: err.message } });
