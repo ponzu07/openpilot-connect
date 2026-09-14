@@ -357,7 +357,7 @@ class DeviceInfo extends Component {
       });
       if (!resp) throw new Error('device offline');
       if (resp.error) throw new Error(resp.error.message || 'no response from car');
-      if (dongleId === this.props.dongleId) this.setState({ hvBattery: { soc: resp.result.soc } });
+      if (dongleId === this.props.dongleId) this.setState({ hvBattery: resp.result });
     } catch (err) {
       if (dongleId === this.props.dongleId) this.setState({ hvBattery: { error: err.message } });
     }
@@ -512,7 +512,7 @@ class DeviceInfo extends Component {
           </Tooltip>
         ))}
         {!isCommaBody && (
-          <Tooltip classes={{ tooltip: classes.popover }} title="HV battery" placement="bottom">
+          <Tooltip classes={{ tooltip: classes.popover }} title={ hvBattery.source ? `HV battery (${hvBattery.source})` : 'HV battery' } placement="bottom">
             <button
               ref={ this.hvBatteryButtonRef }
               className={`${classes.button} ${classes.carBattery} ${buttonOffline}`}
@@ -522,7 +522,7 @@ class DeviceInfo extends Component {
               { hvBattery.fetching
                 ? <CircularProgress size={ 19 } />
                 : <BatteryChargingFull className='text-black' />}
-              { hvBattery.soc !== undefined && <Typography className='text-black ml-1'>{ `${Math.floor(hvBattery.soc)}%` }</Typography> }
+              { hvBattery.soc !== undefined && <Typography className='text-black ml-1'>{ `${Math.floor(hvBattery.soc)}% ${dayjs(hvBattery.time * 1000).format('M/D H:mm')}` }</Typography> }
             </button>
           </Tooltip>
         )}
