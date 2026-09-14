@@ -6,6 +6,7 @@ import { withStyles, Typography, CircularProgress, Popper, Tooltip } from '@mate
 import ContentCut from '@material-ui/icons/ContentCut';
 import Lock from '@material-ui/icons/Lock';
 import LockOpen from '@material-ui/icons/LockOpen';
+import BatteryChargingFull from '@material-ui/icons/BatteryChargingFull';
 
 import { athena as Athena } from '../../api';
 import { deviceSupportsClips } from '../../api/clips';
@@ -169,6 +170,7 @@ class DeviceInfo extends Component {
       carHealth: {},
       snapshot: {},
       doorLock: {},
+      hvBattery: {},
       windowWidth: window.innerWidth,
       bodyTeleopOpen: false,
       clipMenu: null,
@@ -177,11 +179,13 @@ class DeviceInfo extends Component {
 
     this.snapshotButtonRef = React.createRef();
     this.doorLockButtonRef = React.createRef();
+    this.hvBatteryButtonRef = React.createRef();
 
     this.onVisible = this.onVisible.bind(this);
     this.fetchDeviceCarHealth = this.fetchDeviceCarHealth.bind(this);
     this.takeSnapshot = this.takeSnapshot.bind(this);
     this.setDoorLock = this.setDoorLock.bind(this);
+    this.fetchHvBattery = this.fetchHvBattery.bind(this);
     this.snapshotType = this.snapshotType.bind(this);
     this.renderButtons = this.renderButtons.bind(this);
     this.renderSnapshotImage = this.renderSnapshotImage.bind(this);
@@ -209,6 +213,7 @@ class DeviceInfo extends Component {
       this.setState({
         carHealth: {},
         snapshot: {},
+        hvBattery: {},
         windowWidth: window.innerWidth,
         clipMenu: null,
         clipsSupported: false,
@@ -341,6 +346,23 @@ class DeviceInfo extends Component {
     }
   }
 
+  async fetchHvBattery() {
+    const { dongleId } = this.props;
+    this.setState({ hvBattery: { fetching: true } });
+    try {
+      const resp = await Athena.postJsonRpcPayload(dongleId, {
+        method: 'getHvBattery',
+        jsonrpc: '2.0',
+        id: 0,
+      });
+      if (!resp) throw new Error('device offline');
+      if (resp.error) throw new Error(resp.error.message);
+      if (dongleId === this.props.dongleId) this.setState({ hvBattery: { soc: resp.result.soc } });
+    } catch (err) {
+      if (dongleId === this.props.dongleId) this.setState({ hvBattery: { error: err.message } });
+    }
+  }
+
   snapshotType(showFront) {
     const { snapshot } = this.state;
     this.setState({ snapshot: { ...snapshot, showFront } });
@@ -405,7 +427,7 @@ class DeviceInfo extends Component {
 
   renderButtons() {
     const { classes, device } = this.props;
-    const { snapshot, doorLock, carHealth, clipsSupported } = this.state;
+    const { snapshot, doorLock, hvBattery, carHealth, clipsSupported } = this.state;
     const isCommaBody = device?.rpc?.not_car;
 
     let batteryVoltage;
@@ -419,7 +441,7 @@ class DeviceInfo extends Component {
 
     const buttonOffline = deviceIsOnline(device) ? '' : classes.buttonOffline;
 
-    let error = doorLock.error || null;
+    let error = doorLock.error || hvBattery.error || null;
     if (snapshot.error && snapshot.error.data && snapshot.error.data.message) {
       error = snapshot.error.data.message;
     } else if (snapshot.error && snapshot.error.message) {
@@ -489,6 +511,21 @@ class DeviceInfo extends Component {
             </button>
           </Tooltip>
         ))}
+        {!isCommaBody && (
+          <Tooltip classes={{ tooltip: classes.popover }} title="HV battery" placement="bottom">
+            <button
+              ref={ this.hvBatteryButtonRef }
+              className={`${classes.button} ${classes.carBattery} ${buttonOffline}`}
+              onClick={ this.fetchHvBattery }
+              disabled={ Boolean(hvBattery.fetching || !deviceIsOnline(device)) }
+            >
+              { hvBattery.fetching
+                ? <CircularProgress size={ 19 } />
+                : <BatteryChargingFull className='text-black' />}
+              { hvBattery.soc !== undefined && <Typography className='text-black ml-1'>{ `${Math.floor(hvBattery.soc)}%` }</Typography> }
+            </button>
+          </Tooltip>
+        )}
         {!livestreamEnabled && (
           <Tooltip
             classes={{ tooltip: classes.popover }}
@@ -530,7 +567,7 @@ class DeviceInfo extends Component {
           className={ classes.popover }
           open={ Boolean(error) }
           placement="bottom"
-          anchorEl={ doorLock.error ? this.doorLockButtonRef.current : this.snapshotButtonRef.current }
+          anchorEl={ doorLock.error ? this.doorLockButtonRef.current : hvBattery.error ? this.hvBatteryButtonRef.current : this.snapshotButtonRef.current }
         >
           <Typography>{ error }</Typography>
         </Popper>
